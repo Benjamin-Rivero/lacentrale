@@ -16,7 +16,4 @@ public class FavoriteDto {
     @NotNull
     private String listingUuid;
 
-    @NotNull
-    private LocalDateTime createdAt;
-
 }

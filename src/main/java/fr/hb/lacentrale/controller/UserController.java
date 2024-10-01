@@ -21,12 +21,6 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping
-    @JsonView(JsonViewUser.UserMinimalView.class)
-    public User create(@Valid @RequestBody UserCreateDto userCreateDto){
-        return userService.create(userCreateDto);
-    }
-
     @GetMapping("/{id}")
     public User show(@PathVariable String id){
         return userService.findById(id);

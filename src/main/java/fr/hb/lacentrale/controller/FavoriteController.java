@@ -2,6 +2,7 @@ package fr.hb.lacentrale.controller;
 
 import fr.hb.lacentrale.dto.FavoriteDto;
 import fr.hb.lacentrale.entity.Favorite;
+import fr.hb.lacentrale.entity.embeddable.UserListingId;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +20,8 @@ public class FavoriteController {
     private final FavoriteService favoriteService;
 
     @PostMapping
-    public Favorite create(@Valid @RequestBody FavoriteDto favoriteDto){
-        return favoriteService.create(favoriteDto);
+    public Favorite create(@Valid @RequestBody UserListingId userListingId){
+        return favoriteService.create(userListingId);
     }
 
     @GetMapping("/{id}")

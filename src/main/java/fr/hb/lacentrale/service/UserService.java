@@ -11,6 +11,11 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.misc.LogManager;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Repository;
 import fr.hb.lacentrale.dto.UserCreateDto;
 import fr.hb.lacentrale.dto.UserUpdateDto;
@@ -19,12 +24,11 @@ import fr.hb.lacentrale.service.interfaces.ServiceInterface;
 import fr.hb.lacentrale.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Repository
 @AllArgsConstructor
-public class UserService implements ServiceListInterface<User, String, UserCreateDto, UserUpdateDto>, DtoMapperInterface<User,UserCreateDto> {
+public class UserService implements ServiceListInterface<User, String, UserCreateDto, UserUpdateDto>, DtoMapperInterface<User,UserCreateDto>, UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoderConfig encoder;
@@ -113,5 +117,32 @@ public class UserService implements ServiceListInterface<User, String, UserCreat
         user.setActivationCode(null);
         user.setActivationCodeSentAt(null);
         return userRepository.saveAndFlush(user);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<User> optionalUser = userRepository.findByEmail(username);
+        optionalUser.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = optionalUser.get();
+
+        if(!user.isEnabled()) return null;
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                userGrantedAuthority(user.getRoles())
+        );
+    }
+
+    private List<GrantedAuthority> userGrantedAuthority(String role) {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        List<String> roles = Collections.singletonList(role);
+        roles.forEach(r -> {
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+            if (r.contains("ADMIN")) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            }
+        });
+        return authorities;
     }
 }

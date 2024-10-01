@@ -1,5 +1,8 @@
 package fr.hb.lacentrale.service;
 
+import fr.hb.lacentrale.entity.Listing;
+import fr.hb.lacentrale.entity.User;
+import fr.hb.lacentrale.entity.embeddable.UserListingId;
 import fr.hb.lacentrale.service.interfaces.ServiceListInterface;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,55 +14,42 @@ import fr.hb.lacentrale.service.interfaces.ServiceInterface;
 import fr.hb.lacentrale.service.interfaces.DtoMapperInterface;
 import fr.hb.lacentrale.repository.FavoriteRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 @AllArgsConstructor
-public class FavoriteService implements ServiceListInterface<Favorite, Long, FavoriteDto, FavoriteDto>, DtoMapperInterface<Favorite, FavoriteDto> {
+public class FavoriteService{
 
     private final FavoriteRepository favoriteRepository;
     private final UserService userService;
     private final ListingService listingService;
 
-    @Override
-    public Favorite create(FavoriteDto favoriteDto) {
-        return favoriteRepository.saveAndFlush(toEntity(favoriteDto));
+    public Favorite create(UserListingId userListingId) {
+        return favoriteRepository.saveAndFlush(toEntity(userListingId));
     }
 
-    @Override
     public void delete(Favorite favorite) {
         favoriteRepository.delete(favorite);
     }
 
-    @Override
-    public Favorite update(FavoriteDto favoriteDto, Long id) {
-        Favorite favorite = toEntity(favoriteDto);
-        favorite.setId(id);
-        favoriteRepository.saveAndFlush(favorite);
-        return favorite;
-    }
-
-    @Override
     public Favorite findById(Long id) {
         return favoriteRepository.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
 
-    @Override
-    public Favorite toEntity(FavoriteDto favoriteDto) {
+
+    public Favorite toEntity(UserListingId userListingId) {
         Favorite favorite = new Favorite();
-        favorite.setCreatedAt(favoriteDto.getCreatedAt());
-        favorite.setUser(userService.findById(favoriteDto.getUserUuid()));
-        favorite.setListing(listingService.findById(favoriteDto.getListingUuid()));
+        favorite.setId(userListingId);
+        Listing listing = listingService.findById(userListingId.getListingId());
+        User user = userService.findById(userListingId.getUserId());
+        favorite.setCreatedAt(LocalDateTime.now());
+        favorite.setUser(user);
+        favorite.setListing(listing);
         return favorite;
     }
 
-    @Override
-    public FavoriteDto toDto(Favorite favorite) {
-        return null;
-    }
-
-    @Override
     public List<Favorite> list() {
         return favoriteRepository.findAll();
     }
